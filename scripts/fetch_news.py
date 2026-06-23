@@ -9,9 +9,7 @@ feeds = {
 
 content = f"# Weekly Security Report\n\n"
 content += f"Generated: {datetime.now()}\n\n"
-content += f"- Total OpenAI articles: {openai_count}\n"
-content += f"- Total Security Magazine articles: {security_count}\n"
-content += f"- Total Dark Reading articles: {darkreading_count}\n"
+
 for source, url in feeds.items():
 
     content += f"## {source}\n\n"
