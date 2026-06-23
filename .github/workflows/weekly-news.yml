@@ -1,7 +1,7 @@
 name: Weekly News
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
 
 jobs:
   test:
@@ -10,5 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run script
         run: python scripts/fetch_news.py
