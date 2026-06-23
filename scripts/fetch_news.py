@@ -30,7 +30,6 @@ for source, url in feeds.items():
             content += f"Published: {item.published}\n"
 
         content += f"{item.link}\n\n"
-        content += "\n\n# Executive Summary\n\n"
 
 with open("weekly_report.md", "w", encoding="utf-8") as f:
     f.write(content)
