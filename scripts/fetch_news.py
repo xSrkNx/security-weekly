@@ -8,6 +8,7 @@ feeds = {
 
 content = f"# Weekly Security Report\n\n"
 content += f"Generated: {datetime.now()}\n\n"
+content += "### SERKAN TEST 123 ###\n\n"
 
 for source, url in feeds.items():
 
@@ -24,3 +25,5 @@ for source, url in feeds.items():
 
 with open("weekly_report.md", "w", encoding="utf-8") as f:
     f.write(content)
+
+print("Report created")
