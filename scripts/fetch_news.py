@@ -15,6 +15,8 @@ for source, url in feeds.items():
 
     feed = feedparser.parse(url)
 
+    content += f"Entries found: {len(feed.entries)}\n\n"
+
     for item in feed.entries[:5]:
 
         content += f"### {item.title}\n"
@@ -22,5 +24,3 @@ for source, url in feeds.items():
 
 with open("weekly_report.md", "w", encoding="utf-8") as f:
     f.write(content)
-
-print("Report created")
