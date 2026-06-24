@@ -47,6 +47,8 @@ jobs:
           git config --global user.email github-actions@github.com
 
           git add reports/
+          git add index.html
+
           git commit -m "Weekly report $(date +%F)" || exit 0
           git push
 
