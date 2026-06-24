@@ -36,7 +36,11 @@ jobs:
         run: |
           mkdir -p reports
           cp weekly_report.md reports/$(date +%F).md
-
+          
+      - name: Generate website index
+        run: |
+          python scripts/generate_index.py
+          
       - name: Commit report
         run: |
           git config --global user.name github-actions
