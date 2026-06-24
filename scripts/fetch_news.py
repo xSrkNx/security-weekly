@@ -7,20 +7,24 @@ feeds = {
     "Dark Reading": "https://www.darkreading.com/rss.xml",
 }
 
-content = f"# Weekly Security Report\n\n"
+content = "# Weekly Security Report\n\n"
 content += f"Generated: {datetime.now()}\n\n"
+
+summary = {}
 
 for source, url in feeds.items():
 
-    content += f"## {source}\n\n"
-
     feed = feedparser.parse(url)
 
+    summary[source] = len(feed.entries)
+
+    content += f"## {source}\n\n"
     content += f"Feed URL: {url}\n\n"
     content += f"Entries found: {len(feed.entries)}\n\n"
 
     if len(feed.entries) == 0:
         content += "⚠ No entries found\n\n"
+        continue
 
     for item in feed.entries[:5]:
 
@@ -30,6 +34,12 @@ for source, url in feeds.items():
             content += f"Published: {item.published}\n"
 
         content += f"{item.link}\n\n"
+
+content += "\n---\n\n"
+content += "# Executive Summary\n\n"
+
+for source, count in summary.items():
+    content += f"- {source}: {count} entries found\n"
 
 with open("weekly_report.md", "w", encoding="utf-8") as f:
     f.write(content)
