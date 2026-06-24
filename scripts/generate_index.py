@@ -54,7 +54,7 @@ Technology • AI • Security • ITS
 </p>
 
 <nav>
-<a href="/">Home</a> |
+<a href="./">Home</a> |
 <a href="#reports">Reports</a> |
 <a href="https://www.serkantunali.com">Website</a> |
 <a href="https://www.linkedin.com">LinkedIn</a>
