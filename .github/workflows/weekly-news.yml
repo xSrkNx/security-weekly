@@ -3,12 +3,21 @@ name: Weekly News
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: '0 5 * * 1'
+
 jobs:
-  test:
+  build:
+
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
-      - uses: actions/checkout@v4
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -19,13 +28,26 @@ jobs:
         run: |
           pip install feedparser
 
-      - name: Run script
+      - name: Generate report
         run: |
           python scripts/fetch_news.py
 
-      - name: Upload report
+      - name: Save report to repository
+        run: |
+          mkdir -p reports
+          cp weekly_report.md reports/$(date +%F).md
+
+      - name: Commit report
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+          git add reports/
+          git commit -m "Weekly report $(date +%F)" || exit 0
+          git push
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: weekly-report
           path: weekly_report.md
-
