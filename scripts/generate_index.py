@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 reports_dir = Path("reports")
 
@@ -12,21 +13,47 @@ if reports_dir.exists():
 
 latest = reports[0] if reports else None
 
-archive_html = ""
+cards_html = ""
 
 for report in reports:
-    archive_html += f'<li><a href="reports/{report}">{report.replace(".md","")}</a></li>\n'
 
-latest_html = ""
+    report_date = report.replace(".md", "")
+
+    cards_html += f"""
+    <div class="report-card">
+        <h3>{report_date}</h3>
+
+        <p>
+            Weekly Intelligence Report
+        </p>
+
+        <a class="button"
+           href="reports/{report}">
+           Open Report
+        </a>
+
+    </div>
+    """
+
+latest_banner = ""
 
 if latest:
-    latest_html = f"""
-    <div class="card">
-        <h2>Latest Report</h2>
-        <a href="reports/{latest}">
-            {latest.replace(".md","")}
+    latest_banner = f"""
+    <section class="hero">
+
+        <h2>Latest Intelligence Report</h2>
+
+        <p>
+            Latest automatically generated security,
+            AI and technology intelligence briefing.
+        </p>
+
+        <a class="hero-button"
+           href="reports/{latest}">
+           Read Latest Report
         </a>
-    </div>
+
+    </section>
     """
 
 html = f"""
@@ -37,7 +64,12 @@ html = f"""
 
 <meta charset="utf-8">
 
-<title>Serkan TUNALI | Weekly Intelligence</title>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
+
+<title>
+Serkan TUNALI | Intelligence Portal
+</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -47,52 +79,75 @@ html = f"""
 
 <header>
 
+<div class="logo-area">
+
 <h1>Serkan TUNALI</h1>
 
 <p class="subtitle">
 Technology • AI • Security • ITS
 </p>
 
+</div>
+
 <nav>
-<a href="./">Home</a> |
-<a href="#reports">Weekly Intelligence</a> |
-<a href="https://www.serkantunali.com">Website</a> |
-<a href="https://www.linkedin.com/in/serkantunali/">LinkedIn</a>
+
+<a href="./">Home</a>
+
+<a href="#reports">Reports</a>
+
+<a href="https://www.serkantunali.com">
+Website
+</a>
+
+<a href="https://www.linkedin.com/in/serkantunali/">
+LinkedIn
+</a>
+
 </nav>
 
 </header>
 
-<div class="card">
+{latest_banner}
+
+<section class="about">
 
 <h2>About</h2>
 
 <p>
-
-Serkan TUNALI is a senior technology executive with more than 25 years of experience in Physical Security, Intelligent Transportation Systems (ITS), Smart Cities, AI-enabled solutions and enterprise technologies.
-
-This portal provides weekly intelligence reports covering Artificial Intelligence, Cybersecurity, Physical Security, Video Surveillance, Smart Mobility and Emerging Technologies.
-
+Executive leader with 25+ years of experience in
+Physical Security, Intelligent Transportation Systems,
+Smart Cities, AI-enabled solutions and enterprise technologies.
 </p>
 
-</div>
+<p>
+This portal automatically publishes weekly intelligence reports
+covering Cybersecurity, Artificial Intelligence,
+Physical Security and Technology trends.
+</p>
 
-{latest_html}
+</section>
 
-<div class="card" id="reports">
+<section id="reports">
 
 <h2>Reports Archive</h2>
 
-<ul>
+<div class="report-grid">
 
-{archive_html}
-
-</ul>
+{cards_html}
 
 </div>
 
+</section>
+
 <footer>
 
+<p>
 © Serkan TUNALI
+</p>
+
+<p>
+Weekly Intelligence Portal
+</p>
 
 </footer>
 
@@ -104,4 +159,4 @@ This portal provides weekly intelligence reports covering Artificial Intelligenc
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
 
-print("Index generated")
+print("Professional portal generated")
