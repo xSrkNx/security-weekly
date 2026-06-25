@@ -69,7 +69,7 @@ for category, sources in feeds.items():
 
         entry_count = len(feed.entries)
 
-        category_total += entry_count
+        category_total += min(entry_count, 5)
 
         content += f"## {source_name}\n\n"
         content += f"Entries found: {entry_count}\n\n"
