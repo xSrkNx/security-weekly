@@ -8,14 +8,14 @@ feeds = {
         "OpenAI":
         "https://openai.com/news/rss.xml",
 
-        "Microsoft AI":
-        "https://blogs.microsoft.com/ai/feed/",
-
         "Google AI":
         "https://blog.google/technology/ai/rss/",
 
         "NVIDIA":
         "https://blogs.nvidia.com/feed/",
+
+        "Microsoft Security AI":
+        "https://www.microsoft.com/en-us/security/blog/feed/",
     },
 
     "Cyber Security": {
@@ -26,33 +26,36 @@ feeds = {
         "Security Magazine":
         "https://www.securitymagazine.com/rss/topic/2236-security-news",
 
-        "AWS Security":
-        "https://aws.amazon.com/blogs/security/feed/",
-
         "Microsoft Security":
         "https://www.microsoft.com/en-us/security/blog/feed/",
     },
 
     "Physical Security": {
 
-        "Genetec":
-        "https://www.genetec.com/blog/rss.xml",
+        "ONVIF":
+        "https://www.onvif.org/news/feed/",
 
-        "Axis":
-        "https://www.axis.com/blog/rss.xml",
+        "SecurityInfoWatch":
+        "https://www.securityinfowatch.com/rss",
     },
 
     "ITS & Smart Mobility": {
 
-        "ITS International":
-        "https://www.itsinternational.com/rss",
+        "Traffic Technology Today":
+        "https://www.traffictechnologytoday.com/feed",
 
-        "Smart Cities World":
-        "https://www.smartcitiesworld.net/rss.xml",
+        "Smart Cities Dive":
+        "https://www.smartcitiesdive.com/feeds/news/",
     }
 }
 
-content = "# Weekly Executive Intelligence Report\n\n"
+content = "# Serkan TUNALI Executive Intelligence Report\n\n"
+content += """
+Prepared for executive awareness across
+AI, Cyber Security, Physical Security,
+ITS and Smart Mobility sectors.
+
+"""
 content += f"Generated: {datetime.now()}\n\n"
 
 summary = {}
