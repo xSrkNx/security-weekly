@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 reports_dir = Path("reports")
 
@@ -21,6 +20,7 @@ for report in reports:
 
     cards_html += f"""
     <div class="report-card">
+
         <h3>{report_date}</h3>
 
         <p>
@@ -55,31 +55,33 @@ if latest:
 
     </section>
     """
-    radar_section = """
-    <section class="radar">
-    
+
+radar_section = """
+<section class="radar">
+
     <div class="radar-card">
-    <h3>🤖 AI Radar</h3>
-    <p>Generative AI, LLMs, Agents and Enterprise AI</p>
+        <h3>🤖 AI Radar</h3>
+        <p>Generative AI, LLMs, Agents and Enterprise AI</p>
     </div>
-    
+
     <div class="radar-card">
-    <h3>🔐 Cyber Security</h3>
-    <p>Threat Intelligence, Vulnerabilities and Security Trends</p>
+        <h3>🔐 Cyber Security</h3>
+        <p>Threat Intelligence, Vulnerabilities and Security Trends</p>
     </div>
-    
+
     <div class="radar-card">
-    <h3>📹 Physical Security</h3>
-    <p>Video Surveillance, Access Control and ONVIF</p>
+        <h3>📹 Physical Security</h3>
+        <p>Video Surveillance, Access Control and ONVIF</p>
     </div>
-    
+
     <div class="radar-card">
-    <h3>🚗 ITS & Smart Mobility</h3>
-    <p>Smart Cities, Transportation and Connected Vehicles</p>
+        <h3>🚗 ITS & Smart Mobility</h3>
+        <p>Smart Cities, Transportation and Connected Vehicles</p>
     </div>
-    
-    </section>
-    """
+
+</section>
+"""
+
 html = f"""
 <!DOCTYPE html>
 <html>
@@ -87,13 +89,9 @@ html = f"""
 <head>
 
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1">
-
-<title>
-Serkan TUNALI | Intelligence Portal
-</title>
+<title>Serkan TUNALI | Intelligence Portal</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -116,16 +114,9 @@ Technology • AI • Security • ITS
 <nav>
 
 <a href="./">Home</a>
-
 <a href="#reports">Reports</a>
-
-<a href="https://www.serkantunali.com">
-Website
-</a>
-
-<a href="https://www.linkedin.com/in/serkantunali/">
-LinkedIn
-</a>
+<a href="https://www.serkantunali.com">Website</a>
+<a href="https://www.linkedin.com/in/serkantunali/">LinkedIn</a>
 
 </nav>
 
@@ -151,6 +142,8 @@ Physical Security and Technology trends.
 
 </section>
 
+{radar_section}
+
 <section id="reports">
 
 <h2>Reports Archive</h2>
@@ -165,13 +158,9 @@ Physical Security and Technology trends.
 
 <footer>
 
-<p>
-© Serkan TUNALI
-</p>
+<p>© Serkan TUNALI</p>
 
-<p>
-Weekly Intelligence Portal
-</p>
+<p>Weekly Intelligence Portal</p>
 
 </footer>
 
