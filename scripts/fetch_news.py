@@ -51,20 +51,13 @@ feeds = {
 
 content = "# Serkan TUNALI Executive Intelligence Report\n\n"
 
-content += """
-Prepared for executive awareness across
-AI, Cyber Security, Physical Security,
-ITS and Smart Mobility sectors.
-
-"""
-
 content += f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}\n\n"
 
 summary = {}
 
 for category, sources in feeds.items():
 
-    content += f"\n# {category}\n\n"
+    content += f"# {category}\n\n"
 
     category_total = 0
 
@@ -77,7 +70,6 @@ for category, sources in feeds.items():
         category_total += min(entry_count, 5)
 
         content += f"## {source_name}\n\n"
-        content += f"Entries found: {entry_count}\n\n"
 
         if entry_count == 0:
             content += "⚠ No entries found\n\n"
@@ -95,10 +87,11 @@ for category, sources in feeds.items():
     summary[category] = category_total
 
 content += "\n---\n\n"
-content += "# Executive Summary\n\n"
+content += "# Executive Snapshot\n\n"
+
 for category, count in summary.items():
     content += f"- {category}: {count} headlines collected\n"
-    
+
 with open("weekly_report.md", "w", encoding="utf-8") as f:
     f.write(content)
 
