@@ -57,6 +57,17 @@ ITS and Smart Mobility sectors.
 
 """
 content += f"Generated: {datetime.now()}\n\n"
+content += "# Executive Snapshot\n\n"
+
+snapshot_text = ""
+
+for category, count in summary.items():
+    snapshot_text += f"- {category}: {count} headlines\n"
+
+content = content.replace(
+    "# Executive Snapshot\n\n",
+    "# Executive Snapshot\n\n" + snapshot_text + "\n"
+)
 
 summary = {}
 
@@ -88,7 +99,7 @@ for category, sources in feeds.items():
             if hasattr(item, "published"):
                 content += f"Published: {item.published}\n"
 
-            content += f"{item.link}\n\n"
+            content += f"[Read Article]({item.link})\n\n"
 
     summary[category] = category_total
 
