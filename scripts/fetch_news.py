@@ -52,39 +52,49 @@ feeds = {
     }
 }
 
-content = "# Weekly Security Report\n\n"
+content = "# Weekly Executive Intelligence Report\n\n"
 content += f"Generated: {datetime.now()}\n\n"
 
 summary = {}
 
-for source, url in feeds.items():
+for category, sources in feeds.items():
 
-    feed = feedparser.parse(url)
+    content += f"\n# {category}\n\n"
 
-    summary[source] = len(feed.entries)
+    category_total = 0
 
-    content += f"## {source}\n\n"
-    content += f"Feed URL: {url}\n\n"
-    content += f"Entries found: {len(feed.entries)}\n\n"
+    for source_name, url in sources.items():
 
-    if len(feed.entries) == 0:
-        content += "⚠ No entries found\n\n"
-        continue
+        feed = feedparser.parse(url)
 
-    for item in feed.entries[:5]:
+        entry_count = len(feed.entries)
 
-        content += f"### {item.title}\n"
+        category_total += entry_count
 
-        if hasattr(item, "published"):
-            content += f"Published: {item.published}\n"
+        content += f"## {source_name}\n\n"
+        content += f"Entries found: {entry_count}\n\n"
 
-        content += f"{item.link}\n\n"
+        if entry_count == 0:
+            content += "⚠ No entries found\n\n"
+            continue
+
+        for item in feed.entries[:5]:
+
+            content += f"### {item.title}\n"
+
+            if hasattr(item, "published"):
+                content += f"Published: {item.published}\n"
+
+            content += f"{item.link}\n\n"
+
+    summary[category] = category_total
 
 content += "\n---\n\n"
 content += "# Executive Summary\n\n"
 
-for source, count in summary.items():
-    content += f"- {source}: {count} entries found\n"
+for category, count in summary.items():
+
+    content += f"- {category}: {count} articles collected\n"
 
 with open("weekly_report.md", "w", encoding="utf-8") as f:
     f.write(content)
