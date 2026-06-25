@@ -2,13 +2,10 @@ from pathlib import Path
 
 reports_dir = Path("reports")
 
-reports = []
-
-if reports_dir.exists():
-    reports = sorted(
-        [f.name for f in reports_dir.glob("*.md")],
-        reverse=True
-    )
+reports = sorted(
+    [f.name for f in reports_dir.glob("*.md")],
+    reverse=True
+)
 
 latest = reports[0] if reports else None
 
@@ -24,7 +21,7 @@ for report in reports:
         <h3>{report_date}</h3>
 
         <p>
-            Weekly Intelligence Report
+        Executive Intelligence Report
         </p>
 
         <a class="button"
@@ -35,17 +32,19 @@ for report in reports:
     </div>
     """
 
-latest_banner = ""
+latest_html = ""
 
 if latest:
-    latest_banner = f"""
+
+    latest_html = f"""
     <section class="hero">
 
-        <h2>Latest Intelligence Report</h2>
+        <h2>Latest Intelligence Briefing</h2>
 
         <p>
-            Latest automatically generated security,
-            AI and technology intelligence briefing.
+        Weekly insights covering AI,
+        Cyber Security, Physical Security,
+        Smart Cities and ITS.
         </p>
 
         <a class="hero-button"
@@ -56,32 +55,6 @@ if latest:
     </section>
     """
 
-radar_section = """
-<section class="radar">
-
-    <div class="radar-card">
-        <h3>🤖 AI Radar</h3>
-        <p>Generative AI, LLMs, Agents and Enterprise AI</p>
-    </div>
-
-    <div class="radar-card">
-        <h3>🔐 Cyber Security</h3>
-        <p>Threat Intelligence, Vulnerabilities and Security Trends</p>
-    </div>
-
-    <div class="radar-card">
-        <h3>📹 Physical Security</h3>
-        <p>Video Surveillance, Access Control and ONVIF</p>
-    </div>
-
-    <div class="radar-card">
-        <h3>🚗 ITS & Smart Mobility</h3>
-        <p>Smart Cities, Transportation and Connected Vehicles</p>
-    </div>
-
-</section>
-"""
-
 html = f"""
 <!DOCTYPE html>
 <html>
@@ -91,7 +64,9 @@ html = f"""
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Serkan TUNALI | Intelligence Portal</title>
+<title>
+Serkan TUNALI Intelligence Portal
+</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -101,48 +76,63 @@ html = f"""
 
 <header>
 
-<div class="logo-area">
-
 <h1>Serkan TUNALI</h1>
 
 <p class="subtitle">
-Technology • AI • Security • ITS
+Executive Intelligence Portal
 </p>
-
-</div>
 
 <nav>
 
 <a href="./">Home</a>
+
 <a href="#reports">Reports</a>
-<a href="https://www.serkantunali.com">Website</a>
-<a href="https://www.linkedin.com/in/serkantunali/">LinkedIn</a>
+
+<a href="https://www.serkantunali.com">
+Website
+</a>
+
+<a href="https://www.linkedin.com/in/serkantunali/">
+LinkedIn
+</a>
 
 </nav>
 
 </header>
 
-{latest_banner}
+{latest_html}
 
 <section class="about">
 
 <h2>About</h2>
 
 <p>
-Executive leader with 25+ years of experience in
-Physical Security, Intelligent Transportation Systems,
-Smart Cities, AI-enabled solutions and enterprise technologies.
-</p>
-
-<p>
-This portal automatically publishes weekly intelligence reports
-covering Cybersecurity, Artificial Intelligence,
-Physical Security and Technology trends.
+Senior technology executive with 25+ years of experience
+across Physical Security, ITS, Smart Cities,
+Artificial Intelligence and Enterprise Technologies.
 </p>
 
 </section>
 
-{radar_section}
+<section class="radar">
+
+<div class="radar-card">
+<h3>🤖 AI & GenAI</h3>
+</div>
+
+<div class="radar-card">
+<h3>🔐 Cyber Security</h3>
+</div>
+
+<div class="radar-card">
+<h3>📹 Physical Security</h3>
+</div>
+
+<div class="radar-card">
+<h3>🚗 ITS & Smart Mobility</h3>
+</div>
+
+</section>
 
 <section id="reports">
 
@@ -158,9 +148,7 @@ Physical Security and Technology trends.
 
 <footer>
 
-<p>© Serkan TUNALI</p>
-
-<p>Weekly Intelligence Portal</p>
+© Serkan TUNALI
 
 </footer>
 
@@ -169,7 +157,7 @@ Physical Security and Technology trends.
 </html>
 """
 
-with open("index.html", "w", encoding="utf-8") as f:
+with open("index.html","w",encoding="utf-8") as f:
     f.write(html)
 
-print("Professional portal generated")
+print("Portal generated")
