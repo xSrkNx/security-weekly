@@ -2,9 +2,54 @@ import feedparser
 from datetime import datetime
 
 feeds = {
-    "OpenAI": "https://openai.com/news/rss.xml",
-    "Security Magazine": "https://www.securitymagazine.com/rss/topic/2236-security-news",
-    "Dark Reading": "https://www.darkreading.com/rss.xml",
+
+    "AI & GenAI": {
+
+        "OpenAI":
+        "https://openai.com/news/rss.xml",
+
+        "Microsoft AI":
+        "https://blogs.microsoft.com/ai/feed/",
+
+        "Google AI":
+        "https://blog.google/technology/ai/rss/",
+
+        "NVIDIA":
+        "https://blogs.nvidia.com/feed/",
+    },
+
+    "Cyber Security": {
+
+        "Dark Reading":
+        "https://www.darkreading.com/rss.xml",
+
+        "Security Magazine":
+        "https://www.securitymagazine.com/rss/topic/2236-security-news",
+
+        "AWS Security":
+        "https://aws.amazon.com/blogs/security/feed/",
+
+        "Microsoft Security":
+        "https://www.microsoft.com/en-us/security/blog/feed/",
+    },
+
+    "Physical Security": {
+
+        "Genetec":
+        "https://www.genetec.com/blog/rss.xml",
+
+        "Axis":
+        "https://www.axis.com/blog/rss.xml",
+    },
+
+    "ITS & Smart Mobility": {
+
+        "ITS International":
+        "https://www.itsinternational.com/rss",
+
+        "Smart Cities World":
+        "https://www.smartcitiesworld.net/rss.xml",
+    }
 }
 
 content = "# Weekly Security Report\n\n"
