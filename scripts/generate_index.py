@@ -55,7 +55,31 @@ if latest:
 
     </section>
     """
-
+    radar_section = """
+    <section class="radar">
+    
+    <div class="radar-card">
+    <h3>🤖 AI Radar</h3>
+    <p>Generative AI, LLMs, Agents and Enterprise AI</p>
+    </div>
+    
+    <div class="radar-card">
+    <h3>🔐 Cyber Security</h3>
+    <p>Threat Intelligence, Vulnerabilities and Security Trends</p>
+    </div>
+    
+    <div class="radar-card">
+    <h3>📹 Physical Security</h3>
+    <p>Video Surveillance, Access Control and ONVIF</p>
+    </div>
+    
+    <div class="radar-card">
+    <h3>🚗 ITS & Smart Mobility</h3>
+    <p>Smart Cities, Transportation and Connected Vehicles</p>
+    </div>
+    
+    </section>
+    """
 html = f"""
 <!DOCTYPE html>
 <html>
@@ -112,32 +136,6 @@ LinkedIn
 <section class="about">
 
 <h2>About</h2>
-
-radar_section = """
-<section class="radar">
-
-<div class="radar-card">
-<h3>AI Radar</h3>
-<p>Generative AI, LLMs, Agents and Enterprise AI</p>
-</div>
-
-<div class="radar-card">
-<h3>Cyber Security</h3>
-<p>Threats, Vulnerabilities and Security Trends</p>
-</div>
-
-<div class="radar-card">
-<h3>Physical Security</h3>
-<p>Video Surveillance, Access Control and ONVIF</p>
-</div>
-
-<div class="radar-card">
-<h3>ITS & Mobility</h3>
-<p>Smart Cities, C-ITS and Transportation</p>
-</div>
-
-</section>
-"""
 
 <p>
 Executive leader with 25+ years of experience in
