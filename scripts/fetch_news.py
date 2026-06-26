@@ -1,187 +1,236 @@
-from pathlib import Path
+import feedparser
+from datetime import datetime
+from collections import Counter
 import re
 
-reports_dir = Path("reports")
+# ======================================================
+# RSS SOURCES
+# ======================================================
 
-reports = sorted(
-    reports_dir.glob("*.md"),
-    reverse=True
+feeds = {
+
+    "AI & GenAI": {
+
+        "OpenAI":
+        "https://openai.com/news/rss.xml",
+
+        "Google AI":
+        "https://blog.google/technology/ai/rss/",
+
+        "NVIDIA":
+        "https://blogs.nvidia.com/feed/",
+
+        "Microsoft Security AI":
+        "https://www.microsoft.com/en-us/security/blog/feed/",
+    },
+
+    "Cyber Security": {
+
+        "Dark Reading":
+        "https://www.darkreading.com/rss.xml",
+
+        "Security Magazine":
+        "https://www.securitymagazine.com/rss/topic/2236-security-news",
+
+        "Microsoft Security":
+        "https://www.microsoft.com/en-us/security/blog/feed/",
+    },
+
+    "Physical Security": {
+
+        "ONVIF":
+        "https://www.onvif.org/news/feed/",
+
+        "SecurityInfoWatch":
+        "https://www.securityinfowatch.com/rss",
+    },
+
+    "ITS & Smart Mobility": {
+
+        "Traffic Technology Today":
+        "https://www.traffictechnologytoday.com/feed",
+
+        "Smart Cities Dive":
+        "https://www.smartcitiesdive.com/feeds/news/",
+    }
+}
+
+# ======================================================
+# VARIABLES
+# ======================================================
+
+seen_links = set()
+
+summary = {}
+
+feed_status = {}
+
+keyword_counter = Counter()
+
+# ======================================================
+# HEADER
+# ======================================================
+
+content = "# Serkan TUNALI Executive Intelligence Report\n\n"
+
+content += (
+    "Prepared for executive awareness across "
+    "Artificial Intelligence, Cyber Security, "
+    "Physical Security and Intelligent Transportation Systems.\n\n"
 )
 
-latest = reports[0] if reports else None
+content += f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}\n\n"
 
-cards = ""
+content += "---\n\n"
 
-for report in reports:
+content += "# Executive Snapshot\n\n"
 
-    report_name = report.stem
-
-    cards += f"""
-    <a class="report-card" href="reports/{report.name}">
-        <h3>{report_name}</h3>
-        <p>Executive Intelligence Report</p>
-        <span>Read Report →</span>
-    </a>
-    """
-
-latest_button = ""
-
-if latest:
-
-    latest_button = f"""
-    <a class="hero-button"
-       href="reports/{latest.name}">
-       Read Latest Report →
-    </a>
-    """
-
-html = f"""
-<!DOCTYPE html>
-
-<html>
-
-<head>
-
-<meta charset="utf-8">
-
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
-
-<title>
-
-Serkan TUNALI Intelligence Portal
-
-</title>
-
-<link rel="stylesheet"
-href="style.css">
-
-</head>
-
-<body>
-
-<header>
-
-<div>
-
-<h1>Serkan TUNALI</h1>
-
-<p>
-
-Executive Intelligence Portal
-
-</p>
-
-</div>
-
-<nav>
-
-<a href="./">Home</a>
-
-<a href="#reports">Reports</a>
-
-<a href="https://www.serkantunali.com">
-Website
-</a>
-
-<a href="https://www.linkedin.com/in/serkantunali/">
-LinkedIn
-</a>
-
-</nav>
-
-</header>
-
-<section class="hero">
-
-<h2>
-
-Weekly Executive Intelligence
-
-</h2>
-
-<p>
-
-Artificial Intelligence • Cyber Security • Physical Security • ITS
-
-</p>
-
-{latest_button}
-
-</section>
-
-<section class="dashboard">
-
-<div class="dashboard-card">
-<h3>🤖 AI</h3>
-<p>Enterprise AI<br>LLMs<br>Agents</p>
-</div>
-
-<div class="dashboard-card">
-<h3>🔐 Cyber</h3>
-<p>Threats<br>CVEs<br>Zero Trust</p>
-</div>
-
-<div class="dashboard-card">
-<h3>📹 Physical</h3>
-<p>Video<br>ONVIF<br>Access Control</p>
-</div>
-
-<div class="dashboard-card">
-<h3>🚗 ITS</h3>
-<p>Mobility<br>Smart Cities<br>V2X</p>
-</div>
-
-</section>
-
-<section class="about">
-
-<h2>
-
-About
-
-</h2>
-
-<p>
-
-This portal automatically publishes curated weekly
-executive intelligence reports focused on emerging
-technologies and enterprise security.
-
-</p>
-
-</section>
-
-<section id="reports">
-
-<h2>
-
-Reports Archive
-
-</h2>
-
-<div class="report-grid">
-
-{cards}
-
-</div>
-
-</section>
-
-<footer>
-
-© Serkan TUNALI
-
-</footer>
-
-</body>
-
-</html>
-"""
-
-Path("index.html").write_text(
-    html,
-    encoding="utf-8"
+content += (
+    "This report contains curated headlines collected from "
+    "trusted industry sources across AI, Cyber Security, "
+    "Physical Security and Smart Mobility.\n\n"
 )
 
-print("Portal generated")
+# ======================================================
+# COLLECT NEWS
+# ======================================================
+
+for category, sources in feeds.items():
+
+    content += f"\n---\n\n# {category}\n\n"
+
+    category_total = 0
+
+    for source_name, url in sources.items():
+
+        feed = feedparser.parse(url)
+
+        entry_count = len(feed.entries)
+
+        if entry_count > 0:
+            feed_status[source_name] = "🟢 Online"
+        else:
+            feed_status[source_name] = "🔴 Offline"
+
+        content += f"## {source_name}\n\n"
+
+        if entry_count == 0:
+
+            content += "⚠ No entries found.\n\n"
+
+            continue
+
+        added = 0
+
+        for item in feed.entries:
+
+            if item.link in seen_links:
+                continue
+
+            seen_links.add(item.link)
+
+            if added >= 5:
+                break
+
+            added += 1
+            category_total += 1
+
+            title = item.title.strip()
+
+            content += f"### {title}\n"
+
+            if hasattr(item, "published"):
+                content += f"Published: {item.published}\n"
+
+            content += f"[Read Article]({item.link})\n\n"
+
+            words = re.findall(r"[A-Za-z0-9\-\+]{4,}", title)
+
+            keyword_counter.update(words)
+
+    summary[category] = category_total
+
+# ======================================================
+# FEED HEALTH
+# ======================================================
+
+content += "\n---\n\n"
+
+content += "# Feed Health\n\n"
+
+for feed_name, status in feed_status.items():
+
+    content += f"- {status} {feed_name}\n"
+
+# ======================================================
+# EXECUTIVE SUMMARY
+# ======================================================
+
+content += "\n---\n\n"
+
+content += "# Executive Summary\n\n"
+
+total_articles = 0
+
+for category, count in summary.items():
+
+    total_articles += count
+
+    content += f"- **{category}** : {count} curated headlines\n"
+
+content += f"\n**Total Headlines:** {total_articles}\n"
+
+# ======================================================
+# TRENDING TOPICS
+# ======================================================
+
+content += "\n---\n\n"
+
+content += "# Trending Topics\n\n"
+
+ignore = {
+
+    "with",
+    "from",
+    "that",
+    "this",
+    "their",
+    "into",
+    "using",
+    "will",
+    "have",
+    "after",
+    "security",
+    "technology",
+    "report",
+    "week",
+    "latest",
+    "news"
+
+}
+
+shown = 0
+
+for word, count in keyword_counter.most_common():
+
+    if word.lower() in ignore:
+        continue
+
+    if len(word) < 4:
+        continue
+
+    content += f"- {word} ({count})\n"
+
+    shown += 1
+
+    if shown == 10:
+        break
+
+# ======================================================
+# SAVE REPORT
+# ======================================================
+
+with open("weekly_report.md", "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("Weekly Executive Intelligence Report created successfully.")
