@@ -1,59 +1,71 @@
-name: Weekly News
+name: Weekly Intelligence
 
 on:
+
   workflow_dispatch:
 
   schedule:
-    - cron: '0 5 * * 1'
+
+    - cron: "0 7 * * 1"
+
+permissions:
+
+  contents: write
 
 jobs:
-  build:
+
+  intelligence:
 
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+    - uses: actions/setup-python@v5
 
-      - name: Install dependencies
-        run: |
-          pip install feedparser
+      with:
 
-      - name: Generate report
-        run: |
-          python scripts/fetch_news.py
+        python-version: "3.12"
 
-      - name: Save report to repository
-        run: |
-          mkdir -p reports
-          cp weekly_report.md reports/$(date +%F).md
-          
-      - name: Generate website index
-        run: |
-          python scripts/generate_index.py
-          
-      - name: Commit report
-        run: |
-          git config --global user.name github-actions
-          git config --global user.email github-actions@github.com
+    - run: |
 
-          git add reports/
-          git add index.html
+        pip install feedparser
 
-          git commit -m "Weekly report $(date +%F)" || exit 0
-          git push
+    - run: |
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: weekly-report
-          path: weekly_report.md
+        python scripts/fetch_news.py
+
+    - run: |
+
+        mkdir -p reports
+
+        cp weekly_report.md reports/$(date +%F).md
+
+    - run: |
+
+        python scripts/generate_index.py
+
+    - name: Commit changes
+
+      run: |
+
+        git config user.name github-actions
+
+        git config user.email github-actions@github.com
+
+        git add reports
+
+        git add index.html
+
+        git commit -m "Weekly Intelligence $(date +%F)" || exit 0
+
+        git push
+
+    - uses: actions/upload-artifact@v4
+
+      with:
+
+        name: weekly-report
+
+        path: weekly_report.md
