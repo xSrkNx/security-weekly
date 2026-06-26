@@ -1,6 +1,9 @@
 import feedparser
 from datetime import datetime
 
+# Aynı haber iki farklı kategoride tekrar gösterilmesin
+seen_links = set()
+
 feeds = {
 
     "AI & GenAI": {
@@ -49,14 +52,33 @@ feeds = {
     }
 }
 
+# --------------------------------------------------
+
 content = "# Serkan TUNALI Executive Intelligence Report\n\n"
 
-content += f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}\n\n"
+content += (
+    "Prepared for executive awareness across "
+    "Artificial Intelligence, Cyber Security, "
+    "Physical Security and Intelligent Transportation Systems.\n\n"
+)
+
+content += f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}\n\n"
+
+content += "# Executive Snapshot\n\n"
+
+content += (
+    "This report highlights the most relevant developments "
+    "across Artificial Intelligence, Cyber Security, "
+    "Physical Security and Intelligent Transportation Systems.\n\n"
+)
 
 summary = {}
 
+# --------------------------------------------------
+
 for category, sources in feeds.items():
 
+    content += "\n---\n\n"
     content += f"# {category}\n\n"
 
     category_total = 0
@@ -65,34 +87,54 @@ for category, sources in feeds.items():
 
         feed = feedparser.parse(url)
 
-        entry_count = len(feed.entries)
-
-        category_total += min(entry_count, 5)
-
         content += f"## {source_name}\n\n"
 
-        if entry_count == 0:
-            content += "⚠ No entries found\n\n"
+        if len(feed.entries) == 0:
+
+            content += "_No recent articles found._\n\n"
             continue
 
-        for item in feed.entries[:5]:
+        added = 0
 
-            content += f"### {item.title}\n"
+        for item in feed.entries:
+
+            link = getattr(item, "link", "")
+
+            if link in seen_links:
+                continue
+
+            seen_links.add(link)
+
+            added += 1
+
+            if added > 5:
+                break
+
+            category_total += 1
+
+            content += f"### {item.title}\n\n"
 
             if hasattr(item, "published"):
-                content += f"Published: {item.published}\n"
+                content += f"**Published:** {item.published}\n\n"
 
-            content += f"[Read Article]({item.link})\n\n"
+            content += f"[Read Full Article]({link})\n\n"
 
     summary[category] = category_total
 
+# --------------------------------------------------
+
 content += "\n---\n\n"
-content += "# Executive Snapshot\n\n"
+
+content += "# Executive Summary\n\n"
 
 for category, count in summary.items():
-    content += f"- {category}: {count} headlines collected\n"
+
+    content += f"- **{category}** : {count} curated headlines\n"
+
+# --------------------------------------------------
 
 with open("weekly_report.md", "w", encoding="utf-8") as f:
+
     f.write(content)
 
-print("Report created")
+print("Executive report created successfully.")
