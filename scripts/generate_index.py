@@ -1,60 +1,127 @@
 from pathlib import Path
-import re
+from datetime import datetime
 
-reports_dir = Path("reports")
+REPORTS_DIR = Path("reports")
+OUTPUT_FILE = Path("index.html")
 
-reports = sorted(
-    reports_dir.glob("*.md"),
-    reverse=True
-)
+reports = []
 
-latest = reports[0] if reports else None
+if REPORTS_DIR.exists():
+    reports = sorted(REPORTS_DIR.glob("*.md"), reverse=True)
+
+latest = reports[0].name if reports else None
+
+# ---------------------------------------------------
+# Statistics
+# ---------------------------------------------------
+
+report_count = len(reports)
+
+today = datetime.utcnow().strftime("%Y-%m-%d")
+
+sources = 10
+domains = 4
+
+# ---------------------------------------------------
+# Latest Report Card
+# ---------------------------------------------------
+
+latest_html = ""
+
+if latest:
+
+    latest_date = latest.replace(".md", "")
+
+    latest_html = f"""
+<section class="latest-section">
+
+<div class="section-title">
+Latest Intelligence
+</div>
+
+<div class="latest-card">
+
+<h2>{latest_date}</h2>
+
+<p>
+
+Automatically generated executive intelligence briefing
+covering AI, Cyber Security, Physical Security,
+ITS and Smart Mobility.
+
+</p>
+
+<a class="primary-button"
+href="reports/{latest}">
+Read Report
+</a>
+
+</div>
+
+</section>
+"""
+
+# ---------------------------------------------------
+# Report Cards
+# ---------------------------------------------------
 
 cards = ""
 
 for report in reports:
 
-    report_name = report.stem
+    date = report.name.replace(".md", "")
 
     cards += f"""
-    <a class="report-card" href="reports/{report.name}">
-        <h3>{report_name}</h3>
-        <p>Executive Intelligence Report</p>
-        <span>Read Report →</span>
-    </a>
-    """
+<div class="report-card">
 
-latest_button = ""
+<div class="report-date">
 
-if latest:
+📅 {date}
 
-    latest_button = f"""
-    <a class="hero-button"
-       href="reports/{latest.name}">
-       Read Latest Report →
-    </a>
-    """
+</div>
+
+<h3>Executive Intelligence Report</h3>
+
+<p>
+
+Weekly curated intelligence for technology leaders.
+
+</p>
+
+<a class="secondary-button"
+href="reports/{report.name}">
+Open Report
+</a>
+
+</div>
+"""
+
+# ---------------------------------------------------
+# HTML
+# ---------------------------------------------------
 
 html = f"""
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="UTF-8">
 
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1">
 
 <title>
 
-Serkan TUNALI Intelligence Portal
+Serkan TUNALI | Executive Intelligence Portal
 
 </title>
 
-<link rel="stylesheet"
-href="style.css">
+<link rel="stylesheet" href="style.css">
+
+<link rel="icon" href="assets/favicon.svg">
 
 </head>
 
@@ -62,11 +129,17 @@ href="style.css">
 
 <header>
 
+<div class="container header-flex">
+
 <div>
 
-<h1>Serkan TUNALI</h1>
+<h1>
 
-<p>
+Serkan TUNALI
+
+</h1>
+
+<p class="subtitle">
 
 Executive Intelligence Portal
 
@@ -76,65 +149,112 @@ Executive Intelligence Portal
 
 <nav>
 
-<a href="./">Home</a>
+<a href="#">Home</a>
 
-<a href="#reports">Reports</a>
+<a href="#latest">Latest</a>
+
+<a href="#radar">Radar</a>
+
+<a href="#archive">Reports</a>
 
 <a href="https://www.serkantunali.com">
+
 Website
+
 </a>
 
 <a href="https://www.linkedin.com/in/serkantunali/">
+
 LinkedIn
+
 </a>
 
 </nav>
 
+</div>
+
 </header>
+
+<!-- HERO -->
 
 <section class="hero">
 
+<div class="container">
+
 <h2>
 
-Weekly Executive Intelligence
+Trusted Weekly Executive Intelligence
 
 </h2>
 
 <p>
 
-Artificial Intelligence • Cyber Security • Physical Security • ITS
+Curated weekly intelligence across Artificial Intelligence,
+Cyber Security,
+Physical Security,
+Video Surveillance,
+Smart Cities and Intelligent Transportation Systems.
 
 </p>
 
-{latest_button}
+<a class="primary-button"
+href="#latest">
+
+Latest Report
+
+</a>
+
+</div>
 
 </section>
+
+<!-- DASHBOARD -->
 
 <section class="dashboard">
 
-<div class="dashboard-card">
-<h3>🤖 AI</h3>
-<p>Enterprise AI<br>LLMs<br>Agents</p>
+<div class="container dashboard-grid">
+
+<div class="stat-card">
+
+<h2>{report_count}</h2>
+
+<p>Reports</p>
+
 </div>
 
-<div class="dashboard-card">
-<h3>🔐 Cyber</h3>
-<p>Threats<br>CVEs<br>Zero Trust</p>
+<div class="stat-card">
+
+<h2>{sources}</h2>
+
+<p>Sources</p>
+
 </div>
 
-<div class="dashboard-card">
-<h3>📹 Physical</h3>
-<p>Video<br>ONVIF<br>Access Control</p>
+<div class="stat-card">
+
+<h2>{domains}</h2>
+
+<p>Domains</p>
+
 </div>
 
-<div class="dashboard-card">
-<h3>🚗 ITS</h3>
-<p>Mobility<br>Smart Cities<br>V2X</p>
+<div class="stat-card">
+
+<h2>{today}</h2>
+
+<p>Updated</p>
+
+</div>
+
 </div>
 
 </section>
 
+<!-- ABOUT -->
+
 <section class="about">
+
+<div class="container">
 
 <h2>
 
@@ -144,19 +264,84 @@ About
 
 <p>
 
-This portal automatically publishes curated weekly
-executive intelligence reports focused on emerging
-technologies and enterprise security.
+Serkan TUNALI is a senior technology executive with more
+than 25 years of experience in Intelligent Transportation
+Systems, Smart Cities, AI, Physical Security,
+Enterprise Technologies and Digital Transformation.
 
 </p>
 
+</div>
+
 </section>
 
-<section id="reports">
+<!-- RADAR -->
+
+<section
+class="radar"
+id="radar">
+
+<div class="container">
 
 <h2>
 
-Reports Archive
+Technology Radar
+
+</h2>
+
+<div class="radar-grid">
+
+<div class="radar-box">
+
+🤖
+
+<h3>AI & GenAI</h3>
+
+</div>
+
+<div class="radar-box">
+
+🔐
+
+<h3>Cyber Security</h3>
+
+</div>
+
+<div class="radar-box">
+
+📹
+
+<h3>Physical Security</h3>
+
+</div>
+
+<div class="radar-box">
+
+🚗
+
+<h3>ITS & Smart Mobility</h3>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<a id="latest"></a>
+
+{latest_html}
+
+<section
+class="archive"
+id="archive">
+
+<div class="container">
+
+<h2>
+
+Report Archive
 
 </h2>
 
@@ -166,11 +351,28 @@ Reports Archive
 
 </div>
 
+</div>
+
 </section>
 
 <footer>
 
-© Serkan TUNALI
+<div class="container">
+
+<p>
+
+© {datetime.utcnow().year}
+Serkan TUNALI
+
+</p>
+
+<p>
+
+Executive Intelligence Portal
+
+</p>
+
+</div>
 
 </footer>
 
@@ -179,9 +381,6 @@ Reports Archive
 </html>
 """
 
-Path("index.html").write_text(
-    html,
-    encoding="utf-8"
-)
+OUTPUT_FILE.write_text(html, encoding="utf-8")
 
-print("Portal generated")
+print("V7 Portal generated successfully.")
