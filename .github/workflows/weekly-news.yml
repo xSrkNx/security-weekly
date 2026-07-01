@@ -1,15 +1,13 @@
-name: Weekly Intelligence
+name: Weekly Executive Intelligence
 
 on:
 
+  schedule:
+    - cron: '0 6 * * 1'
+
   workflow_dispatch:
 
-  schedule:
-
-    - cron: "0 7 * * 1"
-
 permissions:
-
   contents: write
 
 jobs:
@@ -20,52 +18,62 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v5
+    - name: Setup Python
+      uses: actions/setup-python@v5
 
       with:
+        python-version: '3.12'
 
-        python-version: "3.12"
+        cache: 'pip'
 
-    - run: |
-
-        pip install feedparser
-
-    - run: |
-
-        python scripts/fetch_news.py
-
-    - run: |
-
-        mkdir -p reports
-
-        cp weekly_report.md reports/$(date +%F).md
-
-    - run: |
-
-        python scripts/generate_index.py
-
-    - name: Commit changes
+    - name: Install Dependencies
 
       run: |
 
-        git config user.name github-actions
+        python -m pip install --upgrade pip
 
-        git config user.email github-actions@github.com
+        pip install \
+            feedparser \
+            beautifulsoup4 \
+            lxml
 
-        git add reports
+    - name: Generate Executive Report
 
-        git add index.html
+      run: |
 
-        git commit -m "Weekly Intelligence $(date +%F)" || exit 0
+        python fetch_news.py
+
+    - name: Save Report
+
+      run: |
+
+        mkdir -p reports
+
+        TODAY=$(date +%F)
+
+        cp weekly_report.md reports/${TODAY}.md
+
+    - name: Generate Website
+
+      run: |
+
+        python generate_index.py
+
+    - name: Commit Changes
+
+      run: |
+
+        git config --global user.name github-actions
+
+        git config --global user.email github-actions@github.com
+
+        git add .
+
+        git diff --cached --quiet && exit 0
+
+        git commit -m "Weekly Executive Report $(date +%F)"
 
         git push
-
-    - uses: actions/upload-artifact@v4
-
-      with:
-
-        name: weekly-report
-
-        path: weekly_report.md
