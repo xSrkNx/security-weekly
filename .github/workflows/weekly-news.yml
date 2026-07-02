@@ -32,7 +32,7 @@ jobs:
 
       - name: Generate Executive Intelligence Report
         run: |
-          python fetch_news.py
+          python scripts/fetch_news.py
 
       - name: Archive Weekly Report
         shell: bash
@@ -43,7 +43,7 @@ jobs:
 
       - name: Generate Portal
         run: |
-          python generate_index.py
+          python scripts/generate_index.py
 
       - name: Commit Updated Reports
         shell: bash
