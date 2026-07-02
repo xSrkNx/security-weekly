@@ -17,10 +17,10 @@ latest = reports[0].name if reports else None
 
 report_count = len(reports)
 
-today = datetime.utcnow().strftime("%Y-%m-%d")
+today = datetime.now(UTC).strftime("%Y-%m-%d")
 
-sources = sum(len(v) for v in feeds.values())
-domains = len(feeds)
+sources = 10
+domains = 4
 
 # ---------------------------------------------------
 # Latest Report Card
