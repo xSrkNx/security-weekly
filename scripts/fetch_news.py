@@ -29,6 +29,13 @@ from feeds import feeds
 
 from source_engine import SourceEngine
 
+from intelligence import IntelligenceEngine
+
+intel = IntelligenceEngine(articles)
+
+intel.analyze()
+
+content += intel.markdown()
 # ==========================================================
 # INITIALIZE ENGINE
 # ==========================================================
