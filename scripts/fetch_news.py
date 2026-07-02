@@ -3,8 +3,10 @@ import html
 import socket
 
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from email.utils import parsedate_to_datetime
+
+from feeds import feeds
 
 # ==========================================================
 # CONFIGURATION
@@ -13,7 +15,6 @@ from email.utils import parsedate_to_datetime
 REPORT_TITLE = "Serkan TUNALI Executive Intelligence Report"
 
 MAX_ARTICLES_PER_SOURCE = 5
-
 MAX_TOP_STORIES = 10
 
 REQUEST_TIMEOUT = 20
@@ -30,15 +31,9 @@ summary = {}
 
 top_stories = []
 
-feed_status = {}
+feed_health = []
 
 report_sections = []
-
-# ==========================================================
-# RSS SOURCES
-# ==========================================================
-
-from feeds import feeds
 
 # ==========================================================
 # HELPER FUNCTIONS
@@ -56,39 +51,82 @@ def get_date(entry):
 
     try:
 
-        if hasattr(entry, "published_parsed") and entry.published_parsed:
+        if getattr(entry, "published_parsed", None):
+
             return parsedate_to_datetime(entry.published)
 
     except Exception:
+
         pass
 
-    return datetime.utcnow()
+    return datetime.now(UTC)
 
 
 def make_article(entry):
 
     article = ""
 
-    article += f"### {clean(entry.title)}\n"
+    article += f"### {clean(getattr(entry,'title','No title'))}\n"
 
     if hasattr(entry, "published"):
+
         article += f"Published: {entry.published}\n"
 
     article += f"[Read Article]({entry.link})\n\n"
 
     return article
 
-def check_feed_health(feed):
+
+def feed_status(feed):
+
+    """
+    Returns:
+        icon
+        message
+    """
 
     status = getattr(feed, "status", "Unknown")
 
-    if feed.bozo:
-        return f"⚠ HTTP {status} ({feed.bozo_exception})"
+    if getattr(feed, "bozo", False):
+
+        return (
+            "⚠️",
+            f"HTTP {status} ({feed.bozo_exception})"
+        )
 
     if len(feed.entries) == 0:
-        return f"⚠ HTTP {status} (Empty Feed)"
 
-    return f"✅ HTTP {status}"
+        return (
+            "⚠️",
+            f"HTTP {status} (Empty Feed)"
+        )
+
+    return (
+        "✅",
+        f"HTTP {status}"
+    )
+
+
+def add_top_story(category, source, entry):
+
+    top_stories.append(
+
+        {
+
+            "category": category,
+
+            "source": source,
+
+            "title": clean(getattr(entry, "title", "")),
+
+            "link": getattr(entry, "link", ""),
+
+            "date": get_date(entry)
+
+        }
+
+    )
+
 # ==========================================================
 # REPORT HEADER
 # ==========================================================
@@ -96,14 +134,13 @@ def check_feed_health(feed):
 content = f"""# {REPORT_TITLE}
 
 Generated:
-{datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
+{datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}
 
 ---
 
 ## Executive Snapshot
 
-This report provides a curated executive overview
-of the latest developments across:
+This report provides a curated executive overview of:
 
 - Artificial Intelligence
 - Cyber Security
@@ -111,12 +148,12 @@ of the latest developments across:
 - Intelligent Transportation Systems
 - Smart Mobility
 
-Only trusted industry sources are included.
+Sources are automatically collected from trusted industry
+vendors, standards organizations and technology leaders.
 
 ---
 
 """
-
 
 # ==========================================================
 # RSS COLLECTION
@@ -142,44 +179,43 @@ for category, sources in feeds.items():
 
         try:
 
-        feed = feedparser.parse(url)
+            feed = feedparser.parse(url)
 
-        # -----------------------------
-        # Feed diagnostics
-        # -----------------------------
+        except Exception as ex:
 
-        status = getattr(feed, "status", "Unknown")
+            print(f"❌ {source_name}: {ex}")
 
-        print(f"{source_name:<30} HTTP: {status}")
+            feed_health.append({
+                "source": source_name,
+                "icon": "❌",
+                "message": str(ex)
+            })
 
-        if feed.bozo:
+            section += f"## {source_name}\n\n"
 
-        print(f"⚠ Parsing warning: {feed.bozo_exception}")
+            section += "Unable to read RSS feed.\n\n"
 
-    except Exception as ex:
+            continue
 
-        content += f"## {source_name}\n\n"
+        # ----------------------------------------
+        # Feed Health
+        # ----------------------------------------
 
-        content += "Unable to read RSS feed.\n\n"
+        icon, message = feed_status(feed)
 
-        content += f"{ex}\n\n"
+        feed_health.append({
 
-        print(f"❌ {source_name}: {ex}")
+            "source": source_name,
 
-        continue
+            "icon": icon,
 
+            "message": message
 
-        if getattr(feed, "bozo", False):
+        })
 
-            feed_status[source_name] = "WARNING"
-
-        else:
-
-            feed_status[source_name] = "OK"
-
+        print(f"{icon} {source_name} -> {message}")
 
         section += f"## {source_name}\n\n"
-
 
         if len(feed.entries) == 0:
 
@@ -187,61 +223,60 @@ for category, sources in feeds.items():
 
             continue
 
-
         added = 0
 
         for entry in feed.entries:
 
-            link = getattr(entry, "link", "")
-
             title = clean(getattr(entry, "title", ""))
 
-            unique_id = f"{title}|{link}"
+            link = getattr(entry, "link", "")
 
+            if not title or not link:
 
-            if unique_id in seen_links:
                 continue
 
+            uid = f"{title}|{link}"
 
-            seen_links.add(unique_id)
+            if uid in seen_links:
+
+                continue
+
+            seen_links.add(uid)
 
             section += make_article(entry)
+
+            add_top_story(
+
+                category,
+
+                source_name,
+
+                entry
+
+            )
 
             category_total += 1
 
             added += 1
 
-
-            top_stories.append({
-
-                "category": category,
-
-                "source": source_name,
-
-                "title": title,
-
-                "link": link,
-
-                "date": get_date(entry)
-
-            })
-
-
             if added >= MAX_ARTICLES_PER_SOURCE:
-                break
 
+                break
 
     summary[category] = category_total
 
     report_sections.append(section)
-    # ==========================================================
+
+# ==========================================================
 # SORT TOP STORIES
 # ==========================================================
 
-top_stories = sorted(
-    top_stories,
+top_stories.sort(
+
     key=lambda x: x["date"],
+
     reverse=True
+
 )
 
 top_stories = top_stories[:MAX_TOP_STORIES]
@@ -251,6 +286,7 @@ top_stories = top_stories[:MAX_TOP_STORIES]
 # ==========================================================
 
 for section in report_sections:
+
     content += section
 
 # ==========================================================
@@ -291,11 +327,9 @@ content += """
 
 """
 
-total_articles = 0
+total_articles = sum(summary.values())
 
 for category, count in summary.items():
-
-    total_articles += count
 
     content += f"- **{category}** : {count} curated headlines\n"
 
@@ -303,12 +337,12 @@ content += f"""
 
 Total Headlines : {total_articles}
 
-Generated : {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
+Generated : {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}
 
 """
 
 # ==========================================================
-# FEED STATUS
+# FEED HEALTH
 # ==========================================================
 
 content += """
@@ -321,33 +355,42 @@ content += """
 
 """
 
-ok = 0
+healthy = 0
 warning = 0
 error = 0
 
-for source, status in feed_status.items():
+for feed in feed_health:
 
-    if status == "OK":
-        icon = "✅"
-        ok += 1
+    icon = feed["icon"]
 
-    elif status == "WARNING":
-        icon = "⚠️"
+    if icon == "✅":
+        healthy += 1
+
+    elif icon == "⚠️":
         warning += 1
 
     else:
-        icon = "❌"
         error += 1
 
-    content += f"{icon} {source}\n"
+    content += f"{feed['source']:<30} {icon} {feed['message']}\n"
+
+total_feeds = len(feed_health)
+
+score = 0
+
+if total_feeds:
+
+    score = round((healthy / total_feeds) * 100)
 
 content += f"""
 
-Healthy Feeds : {ok}
+Healthy Feeds     : {healthy}
 
-Warnings : {warning}
+Warnings          : {warning}
 
-Errors : {error}
+Errors            : {error}
+
+Feed Reliability  : {score}%
 
 """
 
@@ -375,7 +418,7 @@ Unique Headlines     : {len(seen_links)}
 
 Top Stories          : {len(top_stories)}
 
-Generated            : {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
+Generated            : {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}
 
 """
 
@@ -393,10 +436,9 @@ Serkan TUNALI Executive Intelligence Portal
 
 https://intelligence.serkantunali.com
 
-This report is automatically generated from trusted
-industry sources covering Artificial Intelligence,
+Automatically generated from trusted AI,
 Cyber Security, Physical Security,
-Smart Cities and Intelligent Transportation Systems.
+Smart Mobility and ITS industry sources.
 
 © Serkan TUNALI
 
@@ -407,8 +449,11 @@ Smart Cities and Intelligent Transportation Systems.
 # ==========================================================
 
 Path("weekly_report.md").write_text(
+
     content,
+
     encoding="utf-8"
+
 )
 
 # ==========================================================
@@ -417,21 +462,29 @@ Path("weekly_report.md").write_text(
 
 print()
 
-print("===========================================")
+print("===============================================")
 print(" Executive Intelligence Report Generated")
-print("===========================================")
+print("===============================================")
 
 print()
 
 print(f"Categories        : {len(summary)}")
+
 print(f"Sources           : {sum(len(v) for v in feeds.values())}")
+
 print(f"Unique Headlines  : {len(seen_links)}")
+
 print(f"Top Stories       : {len(top_stories)}")
+
+print(f"Healthy Feeds     : {healthy}")
+
+print(f"Feed Reliability  : {score}%")
 
 print()
 
 for category, count in summary.items():
-    print(f"{category:<25} {count}")
+
+    print(f"{category:<28} {count}")
 
 print()
 
