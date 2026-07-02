@@ -1,20 +1,28 @@
 import feedparser
+import html
+import socket
 
+from pathlib import Path
 from datetime import datetime
-
 from email.utils import parsedate_to_datetime
 
-from collections import defaultdict
-
-import html
-
 # ==========================================================
-# Configuration
+# CONFIGURATION
 # ==========================================================
+
+REPORT_TITLE = "Serkan TUNALI Executive Intelligence Report"
 
 MAX_ARTICLES_PER_SOURCE = 5
 
 MAX_TOP_STORIES = 10
+
+REQUEST_TIMEOUT = 20
+
+socket.setdefaulttimeout(REQUEST_TIMEOUT)
+
+# ==========================================================
+# GLOBALS
+# ==========================================================
 
 seen_links = set()
 
@@ -22,8 +30,12 @@ summary = {}
 
 top_stories = []
 
+feed_status = {}
+
+report_sections = []
+
 # ==========================================================
-# RSS Sources
+# RSS SOURCES
 # ==========================================================
 
 feeds = {
@@ -74,9 +86,8 @@ feeds = {
     }
 
 }
-
 # ==========================================================
-# Helper Functions
+# HELPER FUNCTIONS
 # ==========================================================
 
 def clean(text):
@@ -92,35 +103,33 @@ def get_date(entry):
     try:
 
         if hasattr(entry, "published_parsed") and entry.published_parsed:
-
             return parsedate_to_datetime(entry.published)
 
     except Exception:
-
         pass
 
     return datetime.utcnow()
 
 
-def article_block(entry):
+def make_article(entry):
 
-    block = ""
+    article = ""
 
-    block += f"### {clean(entry.title)}\n"
+    article += f"### {clean(entry.title)}\n"
 
     if hasattr(entry, "published"):
+        article += f"Published: {entry.published}\n"
 
-        block += f"Published: {entry.published}\n"
+    article += f"[Read Article]({entry.link})\n\n"
 
-    block += f"[Read Article]({entry.link})\n\n"
+    return article
 
-    return block
 
 # ==========================================================
-# Report Header
+# REPORT HEADER
 # ==========================================================
 
-content = f"""# Serkan TUNALI Executive Intelligence Report
+content = f"""# {REPORT_TITLE}
 
 Generated:
 {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
@@ -129,7 +138,8 @@ Generated:
 
 ## Executive Snapshot
 
-This report provides a curated executive overview of the latest developments across:
+This report provides a curated executive overview
+of the latest developments across:
 
 - Artificial Intelligence
 - Cyber Security
@@ -137,18 +147,20 @@ This report provides a curated executive overview of the latest developments acr
 - Intelligent Transportation Systems
 - Smart Mobility
 
-Only the most relevant headlines are included to support executive awareness and strategic decision making.
+Only trusted industry sources are included.
 
 ---
 
 """
+
+
 # ==========================================================
-# Collect RSS Feeds
+# RSS COLLECTION
 # ==========================================================
 
 for category, sources in feeds.items():
 
-    content += f"""
+    section = f"""
 
 ==================================================
 
@@ -170,21 +182,35 @@ for category, sources in feeds.items():
 
         except Exception as ex:
 
-            content += f"## {source_name}\n\n"
+            feed_status[source_name] = "ERROR"
 
-            content += f"Unable to read RSS feed.\n"
+            section += f"## {source_name}\n\n"
 
-            content += f"{ex}\n\n"
+            section += "Unable to read RSS feed.\n\n"
+
+            section += f"{ex}\n\n"
 
             continue
 
-        content += f"## {source_name}\n\n"
+
+        if getattr(feed, "bozo", False):
+
+            feed_status[source_name] = "WARNING"
+
+        else:
+
+            feed_status[source_name] = "OK"
+
+
+        section += f"## {source_name}\n\n"
+
 
         if len(feed.entries) == 0:
 
-            content += "⚠ No articles found.\n\n"
+            section += "⚠ No articles found.\n\n"
 
             continue
+
 
         added = 0
 
@@ -192,21 +218,23 @@ for category, sources in feeds.items():
 
             link = getattr(entry, "link", "")
 
-            if not link:
+            title = clean(getattr(entry, "title", ""))
 
+            unique_id = f"{title}|{link}"
+
+
+            if unique_id in seen_links:
                 continue
 
-            if link in seen_links:
 
-                continue
+            seen_links.add(unique_id)
 
-            seen_links.add(link)
-
-            content += article_block(entry)
+            section += make_article(entry)
 
             category_total += 1
 
             added += 1
+
 
             top_stories.append({
 
@@ -214,7 +242,7 @@ for category, sources in feeds.items():
 
                 "source": source_name,
 
-                "title": clean(entry.title),
+                "title": title,
 
                 "link": link,
 
@@ -222,28 +250,35 @@ for category, sources in feeds.items():
 
             })
 
-            if added >= MAX_ARTICLES_PER_SOURCE:
 
+            if added >= MAX_ARTICLES_PER_SOURCE:
                 break
 
+
     summary[category] = category_total
+
+    report_sections.append(section)
     # ==========================================================
-# Sort Top Stories
+# SORT TOP STORIES
 # ==========================================================
 
 top_stories = sorted(
-
     top_stories,
-
     key=lambda x: x["date"],
-
     reverse=True
-
 )
 
 top_stories = top_stories[:MAX_TOP_STORIES]
+
 # ==========================================================
-# Top Stories
+# BUILD REPORT
+# ==========================================================
+
+for section in report_sections:
+    content += section
+
+# ==========================================================
+# TOP STORIES
 # ==========================================================
 
 content += """
@@ -260,14 +295,14 @@ for article in top_stories:
 
     content += f"### {article['title']}\n"
 
-    content += f"Category: {article['category']}\n"
+    content += f"Category : {article['category']}\n"
 
-    content += f"Source: {article['source']}\n"
+    content += f"Source   : {article['source']}\n"
 
     content += f"[Read Article]({article['link']})\n\n"
 
 # ==========================================================
-# Executive Summary
+# EXECUTIVE SUMMARY
 # ==========================================================
 
 content += """
@@ -290,14 +325,58 @@ for category, count in summary.items():
 
 content += f"""
 
-Total Headlines Collected : {total_articles}
+Total Headlines : {total_articles}
 
 Generated : {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
 
 """
 
 # ==========================================================
-# Report Statistics
+# FEED STATUS
+# ==========================================================
+
+content += """
+
+--------------------------------------------------
+
+# Feed Health
+
+--------------------------------------------------
+
+"""
+
+ok = 0
+warning = 0
+error = 0
+
+for source, status in feed_status.items():
+
+    if status == "OK":
+        icon = "✅"
+        ok += 1
+
+    elif status == "WARNING":
+        icon = "⚠️"
+        warning += 1
+
+    else:
+        icon = "❌"
+        error += 1
+
+    content += f"{icon} {source}\n"
+
+content += f"""
+
+Healthy Feeds : {ok}
+
+Warnings : {warning}
+
+Errors : {error}
+
+"""
+
+# ==========================================================
+# REPORT STATISTICS
 # ==========================================================
 
 content += """
@@ -312,18 +391,20 @@ content += """
 
 content += f"""
 
-Sources Configured : {sum(len(v) for v in feeds.values())}
+Categories           : {len(feeds)}
 
-Categories : {len(feeds)}
+Sources Configured   : {sum(len(v) for v in feeds.values())}
 
-Unique Headlines : {len(seen_links)}
+Unique Headlines     : {len(seen_links)}
 
-Top Stories : {len(top_stories)}
+Top Stories          : {len(top_stories)}
+
+Generated            : {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
 
 """
 
 # ==========================================================
-# Footer
+# FOOTER
 # ==========================================================
 
 content += """
@@ -337,55 +418,45 @@ Serkan TUNALI Executive Intelligence Portal
 https://intelligence.serkantunali.com
 
 This report is automatically generated from trusted
-industry sources including AI vendors,
-cyber security organizations,
-physical security vendors and
-smart mobility publications.
+industry sources covering Artificial Intelligence,
+Cyber Security, Physical Security,
+Smart Cities and Intelligent Transportation Systems.
 
 © Serkan TUNALI
 
 """
 
 # ==========================================================
-# Write Report
+# WRITE REPORT
 # ==========================================================
 
-with open(
-
-    "weekly_report.md",
-
-    "w",
-
+Path("weekly_report.md").write_text(
+    content,
     encoding="utf-8"
+)
 
-) as f:
-
-    f.write(content)
-
-print()
-
-print("========================================")
-
-print(" Executive Intelligence Report Created")
-
-print("========================================")
+# ==========================================================
+# CONSOLE OUTPUT
+# ==========================================================
 
 print()
 
-print(f"Unique Articles : {len(seen_links)}")
+print("===========================================")
+print(" Executive Intelligence Report Generated")
+print("===========================================")
 
-print(f"Top Stories     : {len(top_stories)}")
+print()
 
-print(f"Categories      : {len(summary)}")
+print(f"Categories        : {len(summary)}")
+print(f"Sources           : {sum(len(v) for v in feeds.values())}")
+print(f"Unique Headlines  : {len(seen_links)}")
+print(f"Top Stories       : {len(top_stories)}")
 
 print()
 
 for category, count in summary.items():
-
     print(f"{category:<25} {count}")
 
 print()
 
-print("Report saved to weekly_report.md")
-
-print()
+print("weekly_report.md created successfully.")
