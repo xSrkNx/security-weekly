@@ -38,54 +38,8 @@ report_sections = []
 # RSS SOURCES
 # ==========================================================
 
-feeds = {
+from feeds import feeds
 
-    "AI & GenAI": {
-
-        "OpenAI":
-        "https://openai.com/news/rss.xml",
-
-        "Google AI":
-        "https://blog.google/technology/ai/rss/",
-
-        "NVIDIA":
-        "https://blogs.nvidia.com/feed/",
-
-        "Microsoft Security AI":
-        "https://www.microsoft.com/en-us/security/blog/feed/",
-    },
-
-    "Cyber Security": {
-
-        "Dark Reading":
-        "https://www.darkreading.com/rss.xml",
-
-        "Security Magazine":
-        "https://www.securitymagazine.com/rss/topic/2236-security-news",
-
-        "Microsoft Security":
-        "https://www.microsoft.com/en-us/security/blog/feed/",
-    },
-
-    "Physical Security": {
-
-        "ONVIF":
-        "https://www.onvif.org/news/feed/",
-
-        "SecurityInfoWatch":
-        "https://www.securityinfowatch.com/rss",
-    },
-
-    "ITS & Smart Mobility": {
-
-        "Traffic Technology Today":
-        "https://www.traffictechnologytoday.com/feed",
-
-        "Smart Cities Dive":
-        "https://www.smartcitiesdive.com/feeds/news/",
-    }
-
-}
 # ==========================================================
 # HELPER FUNCTIONS
 # ==========================================================
