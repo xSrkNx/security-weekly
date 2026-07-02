@@ -78,7 +78,17 @@ def make_article(entry):
 
     return article
 
+def check_feed_health(feed):
 
+    status = getattr(feed, "status", "Unknown")
+
+    if feed.bozo:
+        return f"⚠ HTTP {status} ({feed.bozo_exception})"
+
+    if len(feed.entries) == 0:
+        return f"⚠ HTTP {status} (Empty Feed)"
+
+    return f"✅ HTTP {status}"
 # ==========================================================
 # REPORT HEADER
 # ==========================================================
