@@ -132,19 +132,31 @@ for category, sources in feeds.items():
 
         try:
 
-            feed = feedparser.parse(url)
+        feed = feedparser.parse(url)
 
-        except Exception as ex:
+        # -----------------------------
+        # Feed diagnostics
+        # -----------------------------
 
-            feed_status[source_name] = "ERROR"
+        status = getattr(feed, "status", "Unknown")
 
-            section += f"## {source_name}\n\n"
+        print(f"{source_name:<30} HTTP: {status}")
 
-            section += "Unable to read RSS feed.\n\n"
+        if feed.bozo:
 
-            section += f"{ex}\n\n"
+        print(f"⚠ Parsing warning: {feed.bozo_exception}")
 
-            continue
+    except Exception as ex:
+
+        content += f"## {source_name}\n\n"
+
+        content += "Unable to read RSS feed.\n\n"
+
+        content += f"{ex}\n\n"
+
+        print(f"❌ {source_name}: {ex}")
+
+        continue
 
 
         if getattr(feed, "bozo", False):
