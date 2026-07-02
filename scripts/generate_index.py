@@ -1,5 +1,5 @@
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 
 REPORTS_DIR = Path("reports")
 OUTPUT_FILE = Path("index.html")
