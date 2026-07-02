@@ -1,131 +1,53 @@
-import feedparser
-import html
-import socket
+"""
+==========================================================
+Executive Intelligence Portal
+V10 Phoenix
+
+fetch_news.py
+
+Main Report Generator
+
+Responsibilities
+
+- Load configured sources
+- Run Source Engine
+- Build Markdown report
+- Save weekly_report.md
+==========================================================
+"""
 
 from pathlib import Path
 from datetime import datetime, UTC
-from email.utils import parsedate_to_datetime
+
+from config import (
+    REPORT_TITLE,
+    OUTPUT_REPORT,
+    MAX_TOP_STORIES
+)
 
 from feeds import feeds
 
-# ==========================================================
-# CONFIGURATION
-# ==========================================================
-
-REPORT_TITLE = "Serkan TUNALI Executive Intelligence Report"
-
-MAX_ARTICLES_PER_SOURCE = 5
-MAX_TOP_STORIES = 10
-
-REQUEST_TIMEOUT = 20
-
-socket.setdefaulttimeout(REQUEST_TIMEOUT)
+from source_engine import SourceEngine
 
 # ==========================================================
-# GLOBALS
+# INITIALIZE ENGINE
 # ==========================================================
 
-seen_links = set()
+engine = SourceEngine()
 
-summary = {}
+summary = engine.collect(feeds)
 
-top_stories = []
+articles = engine.all_articles()
 
-feed_health = []
+top_stories = engine.top_stories(MAX_TOP_STORIES)
 
-report_sections = []
+feed_health = engine.health()
 
-# ==========================================================
-# HELPER FUNCTIONS
-# ==========================================================
+feed_stats = engine.feed_statistics()
 
-def clean(text):
+vendor_stats = engine.vendor_statistics()
 
-    if not text:
-        return ""
-
-    return html.unescape(text).replace("\n", " ").strip()
-
-
-def get_date(entry):
-
-    try:
-
-        if getattr(entry, "published_parsed", None):
-
-            return parsedate_to_datetime(entry.published)
-
-    except Exception:
-
-        pass
-
-    return datetime.now(UTC)
-
-
-def make_article(entry):
-
-    article = ""
-
-    article += f"### {clean(getattr(entry,'title','No title'))}\n"
-
-    if hasattr(entry, "published"):
-
-        article += f"Published: {entry.published}\n"
-
-    article += f"[Read Article]({entry.link})\n\n"
-
-    return article
-
-
-def feed_status(feed):
-
-    """
-    Returns:
-        icon
-        message
-    """
-
-    status = getattr(feed, "status", "Unknown")
-
-    if getattr(feed, "bozo", False):
-
-        return (
-            "⚠️",
-            f"HTTP {status} ({feed.bozo_exception})"
-        )
-
-    if len(feed.entries) == 0:
-
-        return (
-            "⚠️",
-            f"HTTP {status} (Empty Feed)"
-        )
-
-    return (
-        "✅",
-        f"HTTP {status}"
-    )
-
-
-def add_top_story(category, source, entry):
-
-    top_stories.append(
-
-        {
-
-            "category": category,
-
-            "source": source,
-
-            "title": clean(getattr(entry, "title", "")),
-
-            "link": getattr(entry, "link", ""),
-
-            "date": get_date(entry)
-
-        }
-
-    )
+category_stats = engine.category_statistics()
 
 # ==========================================================
 # REPORT HEADER
@@ -140,28 +62,53 @@ Generated:
 
 ## Executive Snapshot
 
-This report provides a curated executive overview of:
+This report is automatically generated from trusted
+industry sources covering:
 
 - Artificial Intelligence
 - Cyber Security
 - Physical Security
-- Intelligent Transportation Systems
 - Smart Mobility
+- Intelligent Transportation Systems
 
-Sources are automatically collected from trusted industry
-vendors, standards organizations and technology leaders.
+The objective is to provide executive-level awareness
+of important technology developments across strategic
+domains.
 
 ---
 
 """
 
 # ==========================================================
-# RSS COLLECTION
+# EXECUTIVE INSIGHT
 # ==========================================================
 
-for category, sources in feeds.items():
+content += f"""
 
-    section = f"""
+# Executive Insight
+
+This edition includes **{len(articles)} curated articles**
+from **{engine.source_count()} trusted sources**
+covering **{engine.categories()} strategic domains**.
+
+Feed Reliability Score:
+**{feed_stats["reliability"]}%**
+
+The most active technology vendors and organizations
+are highlighted in this report together with the
+latest industry announcements.
+
+---
+
+"""
+
+# ==========================================================
+# CATEGORY SECTIONS
+# ==========================================================
+
+for category in feeds.keys():
+
+    content += f"""
 
 ==================================================
 
@@ -171,123 +118,22 @@ for category, sources in feeds.items():
 
 """
 
-    category_total = 0
+    for article in articles:
 
-    for source_name, url in sources.items():
-
-        print(f"Reading {source_name}...")
-
-        try:
-
-            feed = feedparser.parse(url)
-
-        except Exception as ex:
-
-            print(f"❌ {source_name}: {ex}")
-
-            feed_health.append({
-                "source": source_name,
-                "icon": "❌",
-                "message": str(ex)
-            })
-
-            section += f"## {source_name}\n\n"
-
-            section += "Unable to read RSS feed.\n\n"
+        if article.category != category:
 
             continue
 
-        # ----------------------------------------
-        # Feed Health
-        # ----------------------------------------
+        content += f"### {article.title}\n"
 
-        icon, message = feed_status(feed)
+        if article.published:
 
-        feed_health.append({
-
-            "source": source_name,
-
-            "icon": icon,
-
-            "message": message
-
-        })
-
-        print(f"{icon} {source_name} -> {message}")
-
-        section += f"## {source_name}\n\n"
-
-        if len(feed.entries) == 0:
-
-            section += "⚠ No articles found.\n\n"
-
-            continue
-
-        added = 0
-
-        for entry in feed.entries:
-
-            title = clean(getattr(entry, "title", ""))
-
-            link = getattr(entry, "link", "")
-
-            if not title or not link:
-
-                continue
-
-            uid = f"{title}|{link}"
-
-            if uid in seen_links:
-
-                continue
-
-            seen_links.add(uid)
-
-            section += make_article(entry)
-
-            add_top_story(
-
-                category,
-
-                source_name,
-
-                entry
-
+            content += (
+                f"Published: "
+                f"{article.published.strftime('%Y-%m-%d')}\n"
             )
 
-            category_total += 1
-
-            added += 1
-
-            if added >= MAX_ARTICLES_PER_SOURCE:
-
-                break
-
-    summary[category] = category_total
-
-    report_sections.append(section)
-
-# ==========================================================
-# SORT TOP STORIES
-# ==========================================================
-
-top_stories.sort(
-
-    key=lambda x: x["date"],
-
-    reverse=True
-
-)
-
-top_stories = top_stories[:MAX_TOP_STORIES]
-
-# ==========================================================
-# BUILD REPORT
-# ==========================================================
-
-for section in report_sections:
-
-    content += section
+        content += f"[Read Article]({article.link})\n\n"
 
 # ==========================================================
 # TOP STORIES
@@ -305,41 +151,117 @@ content += """
 
 for article in top_stories:
 
-    content += f"### {article['title']}\n"
+    content += f"### {article.title}\n"
 
-    content += f"Category : {article['category']}\n"
+    content += f"Category : {article.category}\n"
 
-    content += f"Source   : {article['source']}\n"
+    content += f"Source   : {article.source}\n"
 
-    content += f"[Read Article]({article['link']})\n\n"
+    content += f"[Read Article]({article.link})\n\n"
 
 # ==========================================================
-# EXECUTIVE SUMMARY
+# VENDOR ACTIVITY
 # ==========================================================
 
 content += """
 
 --------------------------------------------------
 
-# Executive Summary
+# Vendor Activity
 
 --------------------------------------------------
 
 """
 
-total_articles = sum(summary.values())
+for vendor, count in vendor_stats.items():
 
-for category, count in summary.items():
+    bar = "█" * min(count, 10)
 
-    content += f"- **{category}** : {count} curated headlines\n"
+    content += f"{vendor:<30} {bar} ({count})\n"
 
-content += f"""
+content += "\n"
 
-Total Headlines : {total_articles}
+# ==========================================================
+# CATEGORY SUMMARY
+# ==========================================================
 
-Generated : {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}
+content += """
+
+--------------------------------------------------
+
+# Category Summary
+
+--------------------------------------------------
 
 """
+
+for category, count in category_stats.items():
+
+    content += f"- **{category}** : {count} articles\n"
+
+content += "\n"
+
+# ==========================================================
+# REPORT HIGHLIGHTS
+# ==========================================================
+
+content += """
+
+--------------------------------------------------
+
+# Executive Highlights
+
+--------------------------------------------------
+
+"""
+
+highest_vendor = next(iter(vendor_stats.items()), ("N/A", 0))
+
+content += (
+    f"- Most active vendor: "
+    f"**{highest_vendor[0]}** "
+    f"({highest_vendor[1]} articles)\n"
+)
+
+content += (
+    f"- Total curated articles: "
+    f"**{len(articles)}**\n"
+)
+
+content += (
+    f"- Active sources: "
+    f"**{engine.source_count()}**\n"
+)
+
+content += (
+    f"- Feed Reliability Score: "
+    f"**{feed_stats['reliability']}%**\n"
+)
+
+content += (
+    f"- Strategic domains covered: "
+    f"**{engine.categories()}**\n\n"
+)
+
+# ==========================================================
+# TRENDING SOURCES
+# ==========================================================
+
+content += """
+
+--------------------------------------------------
+
+# Top Sources
+
+--------------------------------------------------
+
+"""
+
+for vendor, count in list(vendor_stats.items())[:10]:
+
+    content += f"- {vendor} ({count})\n"
+
+content += "\n"
 
 # ==========================================================
 # FEED HEALTH
@@ -355,42 +277,28 @@ content += """
 
 """
 
-healthy = 0
-warning = 0
-error = 0
+for health in feed_health:
 
-for feed in feed_health:
+    icon = {
+        "OK": "✅",
+        "WARNING": "⚠️",
+        "ERROR": "❌"
+    }.get(health.status, "•")
 
-    icon = feed["icon"]
-
-    if icon == "✅":
-        healthy += 1
-
-    elif icon == "⚠️":
-        warning += 1
-
-    else:
-        error += 1
-
-    content += f"{feed['source']:<30} {icon} {feed['message']}\n"
-
-total_feeds = len(feed_health)
-
-score = 0
-
-if total_feeds:
-
-    score = round((healthy / total_feeds) * 100)
+    content += (
+        f"{health.source:<30} "
+        f"{icon} {health.message}\n"
+    )
 
 content += f"""
 
-Healthy Feeds     : {healthy}
+Healthy Feeds     : {feed_stats['healthy']}
 
-Warnings          : {warning}
+Warnings          : {feed_stats['warning']}
 
-Errors            : {error}
+Errors            : {feed_stats['error']}
 
-Feed Reliability  : {score}%
+Feed Reliability  : {feed_stats['reliability']}%
 
 """
 
@@ -410,11 +318,13 @@ content += """
 
 content += f"""
 
-Categories           : {len(feeds)}
+Categories           : {engine.categories()}
 
 Sources Configured   : {sum(len(v) for v in feeds.values())}
 
-Unique Headlines     : {len(seen_links)}
+Healthy Sources      : {feed_stats['healthy']}
+
+Unique Articles      : {engine.article_count()}
 
 Top Stories          : {len(top_stories)}
 
@@ -432,13 +342,18 @@ content += """
 
 Prepared by
 
-Serkan TUNALI Executive Intelligence Portal
+Serkan TUNALI
+
+Executive Intelligence Portal
 
 https://intelligence.serkantunali.com
 
-Automatically generated from trusted AI,
-Cyber Security, Physical Security,
-Smart Mobility and ITS industry sources.
+This report is automatically generated from trusted
+industry sources covering Artificial Intelligence,
+Cyber Security,
+Physical Security,
+Smart Mobility and
+Intelligent Transportation Systems.
 
 © Serkan TUNALI
 
@@ -448,7 +363,7 @@ Smart Mobility and ITS industry sources.
 # WRITE REPORT
 # ==========================================================
 
-Path("weekly_report.md").write_text(
+Path(OUTPUT_REPORT).write_text(
 
     content,
 
@@ -462,30 +377,38 @@ Path("weekly_report.md").write_text(
 
 print()
 
-print("===============================================")
-print(" Executive Intelligence Report Generated")
-print("===============================================")
+print("===================================================")
+print(" Executive Intelligence Portal V10 Phoenix")
+print("===================================================")
 
 print()
 
-print(f"Categories        : {len(summary)}")
+print(f"Articles            : {engine.article_count()}")
 
-print(f"Sources           : {sum(len(v) for v in feeds.values())}")
+print(f"Sources             : {engine.source_count()}")
 
-print(f"Unique Headlines  : {len(seen_links)}")
+print(f"Categories          : {engine.categories()}")
 
-print(f"Top Stories       : {len(top_stories)}")
+print(f"Healthy Feeds       : {feed_stats['healthy']}")
 
-print(f"Healthy Feeds     : {healthy}")
+print(f"Warnings            : {feed_stats['warning']}")
 
-print(f"Feed Reliability  : {score}%")
+print(f"Errors              : {feed_stats['error']}")
 
-print()
-
-for category, count in summary.items():
-
-    print(f"{category:<28} {count}")
+print(f"Feed Reliability    : {feed_stats['reliability']} %")
 
 print()
 
-print("weekly_report.md created successfully.")
+print("Top Sources")
+
+print("------------------------------------------")
+
+for source, count in list(vendor_stats.items())[:10]:
+
+    print(f"{source:<30} {count}")
+
+print()
+
+print(f"Report saved to {OUTPUT_REPORT}")
+
+print()
