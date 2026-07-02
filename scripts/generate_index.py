@@ -19,8 +19,8 @@ report_count = len(reports)
 
 today = datetime.utcnow().strftime("%Y-%m-%d")
 
-sources = 10
-domains = 4
+sources = sum(len(v) for v in feeds.values())
+domains = len(feeds)
 
 # ---------------------------------------------------
 # Latest Report Card
